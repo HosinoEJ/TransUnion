@@ -128,6 +128,22 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/protlist',(req,res) => {
+  const SavedTags = getPortTags();
+  const QTag = req.query.tag;//現在頁面的query tag是什麽
+  let filteredPort = SavedTags.Data;//篩選的數據
+  const AllTags = SavedTags.TagList;
+  if(QTag) filteredPort = SavedTags.Data.filter(p => p.tagid && p.tagid.includes(QTag));//篩選SavedTags裏面的tagid是Tag的
+
+  res.render('index', { 
+    SavedTags:filteredPort,//數據（已篩選）
+    QTag,//現在的query
+    AllTags,//所有tag的數據
+    t: req.t, 
+    title:`${title_F}|所有文章` 
+  });
+})
+
 
 
 
