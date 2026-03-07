@@ -135,7 +135,7 @@ app.get('/protlist',(req,res) => {
   const AllTags = SavedTags.TagList;
   if(QTag) filteredPort = SavedTags.Data.filter(p => p.tagid && p.tagid.includes(QTag));//篩選SavedTags裏面的tagid是Tag的
 
-  res.render('index', { 
+  res.render('port-list', { 
     SavedTags:filteredPort,//數據（已篩選）
     QTag,//現在的query
     AllTags,//所有tag的數據
