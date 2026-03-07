@@ -1,0 +1,46 @@
+name: Post File Changes to API
+
+on:
+  push:
+    branches:
+      - main
+    # 這個路徑下的檔案變動時，觸發 Workflow
+    paths:
+      - 'public/prot/**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files in public/prot
+        id: files
+        run: |
+          # 這裡加上了路徑過濾 "public/prot/"
+          # tr '\n' ',' 是將換行轉為逗號，方便 API 處理
+          ADDED=$(git diff --name-only --diff-filter=A ${{ github.event.before }} ${{ github.sha }} -- "public/prot/" | tr '\n' ',' | sed 's/,$//')
+          MODIFIED=$(git diff --name-only --diff-filter=M ${{ github.event.before }} ${{ github.sha }} -- "public/prot/" | tr '\n' ',' | sed 's/,$//')
+          
+          echo "added=$ADDED" >> $GITHUB_OUTPUT
+          echo "modified=$MODIFIED" >> $GITHUB_OUTPUT
+
+
+      - name: Send POST request to API
+        if: steps.files.outputs.added != '' || steps.files.outputs.modified != ''
+        run: |
+          payload=$(jq -n \
+            --arg project "${{ github.repository }}" \
+            --arg commit "${{ github.sha }}" \
+            --arg compare "https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}" \
+            --arg added "${{ steps.files.outputs.added }}" \
+            --arg modified "${{ steps.files.outputs.modified }}" \
+            '{project: $project, commit_id: $commit, compare: $compare, added_files: $added, modified_files: $modified}')
+
+          curl -X POST "https://uninvestigating-aidan-unconjectural.ngrok-free.dev/api/webhook" \
+          -H "Content-Type: application/json" \
+          -H "X-Hosino-Token: ${{ secrets.MY_WEBHOOK_SECRET }}" \
+          -d "$payload"
