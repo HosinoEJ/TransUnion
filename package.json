@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "node api/index.js",
-    "build": "echo 'Building...'",
+    "build": "npm install",
     "dev": "node api/index.js"
   }
 }
